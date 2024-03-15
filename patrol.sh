@@ -3,7 +3,10 @@
 # Author: mkdemir
 
 clear
-VERSION="1.0.0"
+VERSION="1.0.1"
+os_version=$(cat /etc/*release | grep PRETTY_NAME | cut -d'"' -f2)
+host=$(hostname)
+ip=$(hostname -I | awk '{print $1}')
 
 ##########################
 # FUNCTIONS
@@ -96,7 +99,7 @@ compress_file() {
 
 # Inform the user about the script's operation
 echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] $(hostname) [INFO]    Script started."
-echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] $(hostname) [INFO]    Information: Script Version: $VERSION - Hostname: $(hostname) - OS Version: $(cat /etc/*release | grep PRETTY_NAME | cut -d'"' -f2)"
+echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] $(hostname) [INFO]    Information: Script Version: $VERSION - Hostname: $(hostname) - IP: $ip - OS Version: $os_version"
 
 # Check if 'tar' is installed
 if ! command -v tar &> /dev/null; then
@@ -248,7 +251,7 @@ while true; do
             ram_top_processes=$(ps -e -o pid,ppid,user,uid,%cpu,%mem,vsize,rss,tty,stat,start,time,cmd --sort=-%mem,%cpu | head -n 16)
             {
                 echo "========================================================================================="
-                echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] - $(hostname) - RAM Usage: $ram_percent%"
+                echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] - [Script Version: $VERSION] - [Hostname: $(hostname)] - [IP: $ip] - RAM Usage: $ram_percent%"
                 echo "$ram_top_processes"
             } >> "$LOG_FILE_NAME"
 
@@ -257,7 +260,7 @@ while true; do
             cpu_top_processes=$(ps -e -o pid,ppid,user,uid,%cpu,%mem,vsize,rss,tty,stat,start,time,cmd --sort=-%cpu,%mem | head -n 16)
             {
                 echo "========================================================================================="
-                echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] - $(hostname) - CPU Usage: $cpu_percent%"
+                echo "[$(date +"%Y-%m-%d %H:%M:%S.%3N")] - [Script Version: $VERSION] - [Hostname: $(hostname)] - [IP: $ip] - CPU Usage: $cpu_percent%"
                 echo "$cpu_top_processes"
             } >> "$LOG_FILE_NAME"
 
@@ -297,7 +300,9 @@ while true; do
                 stat=$(echo "$line" | awk '{print $10}')
                 cmd=$(echo "$line" | awk '{$1=""; $2=""; $3=""; $4="";$5="";$6="";$7="";$8="";$9="";$10=""; print $0}' | sed 's/^\s*//')
                 date=$(date +"%Y-%m-%d %H:%M:%S.%3N")
-                echo "{\"Date\": \"$date\", \"PID\": \"$pid\", \"PPID\": \"$ppid\", \"User\": \"$user\", \"UID\": \"$uid\", \"CPU\": \"$cpu\", \"MEM\": \"$mem\", \"VSize\": \"$vsize\", \"RSS\": \"$rss\", \"TTY\": \"$tty\", \"State\": \"$stat\", \"CMD\": \"$cmd\"}," >> "$LOG_JSON_FILE_NAME"
+                
+
+                echo "{\"Date\": \"$date\", \"HOSTNAME\": \"$host\", \"IP\": \"$ip\", \"OS\": \"$os_version\", \"PID\": \"$pid\", \"PPID\": \"$ppid\", \"User\": \"$user\", \"UID\": \"$uid\", \"CPU\": \"$cpu\", \"MEM\": \"$mem\", \"VSize\": \"$vsize\", \"RSS\": \"$rss\", \"TTY\": \"$tty\", \"State\": \"$stat\", \"CMD\": \"$cmd\"}," >> "$LOG_JSON_FILE_NAME"
             done
             sed -i '$ s/,$//' "$LOG_JSON_FILE_NAME"
             echo "]" >> "$LOG_JSON_FILE_NAME"
